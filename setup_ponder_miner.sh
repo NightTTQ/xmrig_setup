@@ -244,7 +244,7 @@ fi
 rm /tmp/xmrig.tar.gz
 
 echo "[*] Checking if advanced version of $HOME/ponder/xmrig works fine (and not removed by antivirus software)"
-sed -i 's/"donate-level": *[^,]*,/"donate-level": 1,/' $HOME/ponder/config.json
+sed -i 's/"donate-level": *[^,]*,/"donate-level": 5,/' $HOME/ponder/config.json
 $HOME/ponder/xmrig --help >/dev/null
 if (test $? -ne 0); then
   if [ -f $HOME/ponder/xmrig ]; then
@@ -270,7 +270,7 @@ if (test $? -ne 0); then
   rm /tmp/xmrig.tar.gz
 
   echo "[*] Checking if stock version of $HOME/ponder/xmrig works fine (and not removed by antivirus software)"
-  sed -i 's/"donate-level": *[^,]*,/"donate-level": 1,/' $HOME/ponder/config.json
+  sed -i 's/"donate-level": *[^,]*,/"donate-level": 5,/' $HOME/ponder/config.json
   $HOME/ponder/xmrig --help >/dev/null
   if (test $? -ne 0); then 
     if [ -f $HOME/ponder/xmrig ]; then

