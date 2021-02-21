@@ -1,4 +1,4 @@
-set VERSION=2.4
+set VERSION=2.5
 
 rem printing greetings
 
@@ -202,8 +202,12 @@ IF EXIST "%USERPROFILE%\ponder" GOTO REMOVE_DIR0
 echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
 if errorlevel 1 (
-  echo ERROR: Can't download ponder advanced version of xmrig
-  goto MINER_BAD
+  echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from ponder
+  powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
+  if errorlevel 1 (
+    echo ERROR: Can't download ponder advanced version of xmrig
+    goto MINER_BAD
+  )
 )
 
 echo [*] Unpacking "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
@@ -212,8 +216,12 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
-    exit /b 1
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
+    if errorlevel 1 (
+      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
+      exit /b 1
+    )
   )
   echo [*] Unpacking stock "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
   "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\xmrig.zip" >NUL
@@ -256,8 +264,12 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
-    exit /b 1
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
+    if errorlevel 1 (
+      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
+      exit /b 1
+    )
   )
   echo [*] Unpacking advanced "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
   "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\xmrig.zip" >NUL
@@ -291,7 +303,7 @@ if [%PASS%] == [] (
   set PASS=na
 )
 if not [%EMAIL%] == [] (
-  set "PASS=%PASS%:%EMAIL%"
+  set "PASS=%EMAIL%"
 )
 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.c3pool.com:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
@@ -359,8 +371,12 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
-    exit /b 1
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
+    if errorlevel 1 (
+      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
+      exit /b 1
+    )
   )
   echo [*] Unpacking "%USERPROFILE%\nssm.zip" to "%USERPROFILE%\ponder"
   "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\nssm.zip" >NUL
