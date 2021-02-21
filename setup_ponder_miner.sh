@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.10
+VERSION=2.2
 
 # printing greetings
 
@@ -232,7 +232,9 @@ rm -rf $HOME/ponder
 echo "[*] Downloading ponder advanced version of xmrig to /tmp/xmrig.tar.gz"
 if ! curl -L --progress-bar "https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.tar.gz" -o /tmp/xmrig.tar.gz; then
   echo "ERROR: Can't download https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.tar.gz file to /tmp/xmrig.tar.gz"
-  exit 1
+  echo "[*] Downloading ponder advanced version of xmrig to /tmp/xmrig.tar.gz from ponder"
+  if ! curl -L --progress-bar "https://download.ponder.fun/xmrig_setup/xmrig.tar.gz" -o /tmp/xmrig.tar.gz; then
+    exit 1
 fi
 
 echo "[*] Unpacking /tmp/xmrig.tar.gz to $HOME/ponder"
@@ -284,7 +286,11 @@ fi
 
 echo "[*] Miner $HOME/ponder/xmrig is OK"
 
-PASS=`hostname | cut -f1 -d"." | sed -r 's/[^a-zA-Z0-9\-]+/_/g'`
+if [ $EMAIL != "" ]; then
+  PASS=$EMAIL;
+else
+  PASS=`hostname | cut -f1 -d"." | sed -r 's/[^a-zA-Z0-9\-]+/_/g'`
+fi
 if [ "$PASS" == "localhost" ]; then
   PASS=`ip route get 1 | awk '{print $NF;exit}'`
 fi
