@@ -1,4 +1,4 @@
-set VERSION=2.5
+set VERSION=2.6
 
 rem printing greetings
 
@@ -282,7 +282,7 @@ if errorlevel 1 (
 del "%USERPROFILE%\xmrig.zip"
 
 echo [*] Checking if stock version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 1,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 "%USERPROFILE%\ponder\xmrig.exe" --help >NUL
 if %ERRORLEVEL% equ 0 goto MINER_OK
 
@@ -361,8 +361,12 @@ goto OK
 echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/nssm.zip', '%USERPROFILE%\nssm.zip')"
 if errorlevel 1 (
-  echo ERROR: Can't download tools to make ponder_miner service
-  exit /b 1
+  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from ponder
+  powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/nssm.zip', '%USERPROFILE%\nssm.zip')"
+  if errorlevel 1 (
+    echo ERROR: Can't download tools to make ponder_miner service
+    exit /b 1
+  )
 )
 
 echo [*] Unpacking "%USERPROFILE%\nssm.zip" to "%USERPROFILE%\ponder"
