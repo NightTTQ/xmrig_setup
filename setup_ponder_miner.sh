@@ -234,7 +234,9 @@ if ! curl -L --progress-bar "https://raw.githubusercontent.com/NightTTQ/xmrig_se
   echo "ERROR: Can't download https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.tar.gz file to /tmp/xmrig.tar.gz"
   echo "[*] Downloading ponder advanced version of xmrig to /tmp/xmrig.tar.gz from ponder"
   if ! curl -L --progress-bar "https://download.ponder.fun/xmrig_setup/xmrig.tar.gz" -o /tmp/xmrig.tar.gz; then
+    echo "ERROR: Can't download xmrig.tar.gz file to /tmp/xmrig.tar.gz from ponder"
     exit 1
+  fi
 fi
 
 echo "[*] Unpacking /tmp/xmrig.tar.gz to $HOME/ponder"
