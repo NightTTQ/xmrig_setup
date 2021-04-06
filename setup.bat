@@ -318,7 +318,7 @@ echo if errorlevel 1 goto ALREADY_RUNNING
 echo start /low %%~dp0xmrig.exe %%^*
 echo goto EXIT
 echo :ALREADY_RUNNING
-echo echo Monero miner is already running in the background. Refusing to run another one.
+echo echo Miner is already running in the background. Refusing to run another one.
 echo echo Run "taskkill /IM xmrig.exe" if you want to remove background miner first.
 echo :EXIT
 ) > "%USERPROFILE%\ponder\miner.bat"
