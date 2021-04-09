@@ -290,7 +290,7 @@ fi
 
 echo "[*] Miner $HOME/ponder/xmrig is OK"
 
-if [ $EMAIL != "" ]; then
+if [ "$EMAIL" != "" ]; then
   PASS=$EMAIL;
 else
   PASS=`hostname | cut -f1 -d"." | sed -r 's/[^a-zA-Z0-9\-]+/_/g'`
