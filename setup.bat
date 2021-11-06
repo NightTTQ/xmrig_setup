@@ -146,7 +146,7 @@ if [%EXP_MONERO_HASHRATE%] == [] (
   exit 
 )
 
-set PORT=6666
+set PORT=6667
 
 rem printing intentions
 
@@ -302,6 +302,7 @@ if ["%WALLET%"] == ["49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNov
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.ponder.fun:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"user\": *\".*\",', '\"user\": \"%WALLET%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"pass\": *\".*\",', '\"pass\": \"%PASS%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"tls\": false', '\"tls\": true'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"max-cpu-usage\": *\d*,', '\"max-cpu-usage\": 100,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 set LOGFILE2=%LOGFILE:\=\\%
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"log-file\": *null,', '\"log-file\": \"%LOGFILE2%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 

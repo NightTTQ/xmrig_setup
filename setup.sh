@@ -305,13 +305,14 @@ if [ ! -z $EMAIL ]; then
   PASS="$PASS:$EMAIL"
 fi
 if [ "$WALLET" == "49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t" ]; then
-  PORT=$(( 6666 ))
+  PORT=$(( 6667 ))
   WALLET=$PASS
 fi
 
 sed -i 's/"url": *"[^"]*",/"url": "mine.ponder.fun:'$PORT'",/' $HOME/ponder/config.json
 sed -i 's/"user": *"[^"]*",/"user": "'$WALLET'",/' $HOME/ponder/config.json
 sed -i 's/"pass": *"[^"]*",/"pass": "'$PASS'",/' $HOME/ponder/config.json
+sed -i 's/"tls": *false,/"tls": true,/' $HOME/ponder/config.json
 sed -i 's/"max-cpu-usage": *[^,]*,/"max-cpu-usage": 100,/' $HOME/ponder/config.json
 sed -i 's#"log-file": *null,#"log-file": "'$HOME/ponder/xmrig.log'",#' $HOME/ponder/config.json
 sed -i 's/"syslog": *[^,]*,/"syslog": true,/' $HOME/ponder/config.json
