@@ -25,16 +25,6 @@ if [%WALLET%] == [] (
   set WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
 )
 
-for /f "delims=." %%a in ("%WALLET%") do set WALLET_BASE=%%a
-call :strlen "%WALLET_BASE%", WALLET_BASE_LEN
-if %WALLET_BASE_LEN% == 106 goto WALLET_LEN_OK
-if %WALLET_BASE_LEN% ==  95 goto WALLET_LEN_OK
-echo ERROR: Wrong wallet address length (should be 106 or 95): %WALLET_BASE_LEN%
-echo Now will use Default wallet address
-set WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
-
-:WALLET_LEN_OK
-
 if ["%USERPROFILE%"] == [""] (
   echo ERROR: Please define USERPROFILE environment variable to your user directory
   exit /b 1
@@ -419,13 +409,3 @@ echo
 echo [*] Setup complete
 timeout 3
 exit /b 0
-
-:strlen string len
-setlocal EnableDelayedExpansion
-set "token=#%~1" & set "len=0"
-for /L %%A in (12,-1,0) do (
-  set/A "len|=1<<%%A"
-  for %%B in (!len!) do if "!token:~%%B,1!"=="" set/A "len&=~1<<%%A"
-)
-endlocal & set %~2=%len%
-exit /b
