@@ -199,13 +199,13 @@ timeout 5
 rmdir /q /s "%USERPROFILE%\ponder" >NUL 2>NUL
 IF EXIST "%USERPROFILE%\ponder" GOTO REMOVE_DIR0
 
-echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
+echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
 if errorlevel 1 (
-  echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from ponder
+  echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from Ponder
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
   if errorlevel 1 (
-    echo ERROR: Can't download ponder advanced version of xmrig
+    echo ERROR: Can't download Ponder advanced version of xmrig from Ponder
     goto MINER_BAD
   )
 )
@@ -264,10 +264,10 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
     powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
     if errorlevel 1 (
-      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
+      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
       exit /b 1
     )
   )
@@ -282,7 +282,7 @@ if errorlevel 1 (
 del "%USERPROFILE%\xmrig.zip"
 
 echo [*] Checking if stock version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 1,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 "%USERPROFILE%\ponder\xmrig.exe" --help >NUL
 if %ERRORLEVEL% equ 0 goto MINER_OK
 
@@ -303,7 +303,7 @@ if [%PASS%] == [] (
   set PASS=na
 )
 if not [%EMAIL%] == [] (
-  set "PASS=%EMAIL%"
+  set "PASS=%PASS%:%EMAIL%"
 )
 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.c3pool.com:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
@@ -361,7 +361,7 @@ goto OK
 echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/nssm.zip', '%USERPROFILE%\nssm.zip')"
 if errorlevel 1 (
-  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from ponder
+  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from Ponder
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/nssm.zip', '%USERPROFILE%\nssm.zip')"
   if errorlevel 1 (
     echo ERROR: Can't download tools to make ponder_miner service
@@ -375,7 +375,7 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
     powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
     if errorlevel 1 (
       echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"

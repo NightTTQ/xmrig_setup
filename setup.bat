@@ -1,6 +1,6 @@
 @echo off
 
-set VERSION=1.0
+set VERSION=1.1
 
 rem printing greetings
 
@@ -24,6 +24,16 @@ if [%WALLET%] == [] (
   echo Now will use Default wallet address
   set WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
 )
+
+for /f "delims=." %%a in ("%WALLET%") do set WALLET_BASE=%%a
+call :strlen "%WALLET_BASE%", WALLET_BASE_LEN
+if %WALLET_BASE_LEN% == 95 goto WALLET_LEN_OK
+echo ERROR: Wrong wallet address length (should be 95): %WALLET_BASE_LEN%
+echo Now will use Default wallet address
+set WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
+goto WALLET_LEN_OK
+
+:WALLET_LEN_OK
 
 if ["%USERPROFILE%"] == [""] (
   echo ERROR: Please define USERPROFILE environment variable to your user directory
@@ -138,6 +148,8 @@ if [%EXP_MONERO_HASHRATE%] == [] (
 
 set PORT=6667
 
+:PORT_OK
+
 rem printing intentions
 
 set "LOGFILE=%USERPROFILE%\ponder\xmrig.log"
@@ -177,13 +189,13 @@ timeout 3
 rmdir /q /s "%USERPROFILE%\ponder" >NUL 2>NUL
 IF EXIST "%USERPROFILE%\ponder" GOTO REMOVE_DIR0
 
-echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
+echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
 if errorlevel 1 (
-  echo [*] Downloading ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from ponder
+  echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from Ponder
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
   if errorlevel 1 (
-    echo ERROR: Can't download ponder advanced version of xmrig
+    echo ERROR: Can't download Ponder advanced version of xmrig from Ponder
     goto MINER_BAD
   )
 )
@@ -208,7 +220,7 @@ if errorlevel 1 (
 del "%USERPROFILE%\xmrig.zip"
 
 echo [*] Checking if advanced version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 99,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
+powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
 timeout 3
 "%USERPROFILE%\ponder\xmrig.exe" --help >NUL
 if %ERRORLEVEL% equ 0 goto MINER_OK
@@ -243,10 +255,10 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
     powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
     if errorlevel 1 (
-      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
+      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
       exit /b 1
     )
   )
@@ -282,11 +294,7 @@ if [%PASS%] == [] (
   set PASS=na
 )
 if not [%EMAIL%] == [] (
-  set "PASS=%EMAIL%"
-)
-
-if ["%WALLET%"] == ["49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t"] (
-  set "WALLET=%PASS%"
+  set "PASS=%PASS%:%EMAIL%"
 )
 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.ponder.fun:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
@@ -309,7 +317,8 @@ echo if errorlevel 1 goto ALREADY_RUNNING
 echo start /low %%~dp0xmrig.exe %%^*
 echo goto EXIT
 echo :ALREADY_RUNNING
-echo echo Miner is already running in the background. Refusing to run another one. Run "taskkill /IM xmrig.exe" if you want to remove background miner first.
+echo echo Monero miner is already running in the background. Refusing to run another one.
+echo echo Run "taskkill /IM xmrig.exe" if you want to remove background miner first.
 echo :EXIT
 ) > "%USERPROFILE%\ponder\miner.bat"
 
@@ -349,7 +358,7 @@ goto OK
 echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/nssm.zip', '%USERPROFILE%\nssm.zip')"
 if errorlevel 1 (
-  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from ponder
+  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from Ponder
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/nssm.zip', '%USERPROFILE%\nssm.zip')"
   if errorlevel 1 (
     echo ERROR: Can't download tools to make ponder_miner service
@@ -363,7 +372,7 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
     powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
     if errorlevel 1 (
       echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
@@ -409,3 +418,18 @@ echo
 echo [*] Setup complete
 timeout 3
 exit /b 0
+
+:strlen string len
+setlocal EnableDelayedExpansion
+set "token=#%~1" & set "len=0"
+for /L %%A in (12,-1,0) do (
+  set/A "len|=1<<%%A"
+  for %%B in (!len!) do if "!token:~%%B,1!"=="" set/A "len&=~1<<%%A"
+)
+endlocal & set %~2=%len%
+exit /b
+
+
+
+
+
