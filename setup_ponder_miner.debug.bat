@@ -1,4 +1,5 @@
-set VERSION=2.6
+setlocal enabledelayedexpansion
+set VERSION=3.0
 
 rem printing greetings
 
@@ -79,6 +80,27 @@ if %ADMIN% == 1 (
     exit /b 1
   )
 )
+
+rem detecting system architecture (x64 vs arm64)
+set "GITHUB_BASE=https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master"
+set "MIRROR_BASE=https://download.ponder.fun/xmrig_setup"
+set "XMRIG_DEFAULT_FILE=xmrig.zip"
+
+if "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+  set "XMRIG_FILE=xmrig-arm64.zip"
+  set "XMRIG_OFFICIAL_PATTERN=windows-arm64.zip"
+  echo [*] Detected architecture: ARM64 - using xmrig-arm64.zip
+) else (
+  set "XMRIG_FILE=xmrig-win64.zip"
+  set "XMRIG_OFFICIAL_PATTERN=windows-x64.zip"
+  if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
+    echo [*] Detected architecture: %PROCESSOR_ARCHITECTURE% - will try default x64 build
+    set "XMRIG_FILE="
+  ) else (
+    echo [*] Detected architecture: AMD64 ^(x64^) - using xmrig-win64.zip
+  )
+)
+if not defined XMRIG_FILE set "XMRIG_FILE="
 
 rem calculating port
 
@@ -184,7 +206,7 @@ echo.
 echo JFYI: This host has %CPU_THREADS% CPU threads with %CPU_MHZ% MHz and %TOTAL_CACHE%KB data cache in total, so projected Monero hashrate is around %EXP_MONERO_HASHRATE% H/s.
 echo.
 
-pause
+timeout 5
 
 rem start doing stuff: preparing miner
 
@@ -199,100 +221,70 @@ timeout 5
 rmdir /q /s "%USERPROFILE%\ponder" >NUL 2>NUL
 IF EXIST "%USERPROFILE%\ponder" GOTO REMOVE_DIR0
 
-echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip"
-powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
-if errorlevel 1 (
-  echo [*] Downloading Ponder advanced version of xmrig to "%USERPROFILE%\xmrig.zip" from Ponder
-  powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/xmrig.zip', '%USERPROFILE%\xmrig.zip')"
-  if errorlevel 1 (
-    echo ERROR: Can't download Ponder advanced version of xmrig from Ponder
-    goto MINER_BAD
-  )
+set MINER_FOUND=0
+set MINER_SOURCE=ponder
+
+rem Step 1: architecture-specific build from GitHub
+if defined XMRIG_FILE (
+  echo [*] Step 1: Trying %XMRIG_FILE% from GitHub...
+  set "TRY_URL=%GITHUB_BASE%/%XMRIG_FILE%"
+  call :TryDownload
+  if !MINER_VERIFIED!==1 set MINER_FOUND=1
 )
 
-echo [*] Unpacking "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
-powershell -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('%USERPROFILE%\xmrig.zip', '%USERPROFILE%\ponder')"
-if errorlevel 1 (
-  echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
-  powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
-  if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
-    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
-    if errorlevel 1 (
-      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
-      exit /b 1
+rem Step 2: architecture-specific build from mirror
+if %MINER_FOUND%==0 if defined XMRIG_FILE (
+  echo [*] Step 2: Trying %XMRIG_FILE% from mirror...
+  set "TRY_URL=%MIRROR_BASE%/%XMRIG_FILE%"
+  call :TryDownload
+  if !MINER_VERIFIED!==1 set MINER_FOUND=1
+)
+
+rem Step 3: default build from GitHub
+if %MINER_FOUND%==0 (
+  echo [*] Step 3: Trying default build %XMRIG_DEFAULT_FILE% from GitHub...
+  set "TRY_URL=%GITHUB_BASE%/%XMRIG_DEFAULT_FILE%"
+  call :TryDownload
+  if !MINER_VERIFIED!==1 set MINER_FOUND=1
+)
+
+rem Step 4: default build from mirror
+if %MINER_FOUND%==0 (
+  echo [*] Step 4: Trying default build %XMRIG_DEFAULT_FILE% from mirror...
+  set "TRY_URL=%MIRROR_BASE%/%XMRIG_DEFAULT_FILE%"
+  call :TryDownload
+  if !MINER_VERIFIED!==1 set MINER_FOUND=1
+)
+
+rem Step 5: official xmrig release
+if %MINER_FOUND%==0 (
+  if not defined XMRIG_OFFICIAL_PATTERN (
+    echo WARNING: No official xmrig release for this architecture, skipping Step 5
+  ) else (
+    echo [*] Step 5: Looking for latest official xmrig ^(%XMRIG_OFFICIAL_PATTERN%^)
+    set "TRY_PATTERN=*%XMRIG_OFFICIAL_PATTERN%"
+    for /f "delims=" %%a in ('powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $u = (Invoke-WebRequest -Uri 'https://github.com/xmrig/xmrig/releases/latest' -UseBasicParsing).Links | ForEach-Object { $_.href } | Where-Object { $_ -like '%TRY_PATTERN%' } | Select-Object -First 1; if ($u -and $u -notmatch '^https') { $u = 'https://github.com' + $u }; if ($u) { Write-Output $u }"') do set "TRY_URL=%%a"
+    if defined TRY_URL (
+      call :TryDownload
+      if !MINER_VERIFIED!==1 (
+        set MINER_FOUND=1
+        set MINER_SOURCE=official
+      )
     )
   )
-  echo [*] Unpacking stock "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
-  "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\xmrig.zip" >NUL
-  del "%USERPROFILE%\7za.exe"
-)
-del "%USERPROFILE%\xmrig.zip"
-
-echo [*] Checking if advanced version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
-"%USERPROFILE%\ponder\xmrig.exe" --help >NUL
-if %ERRORLEVEL% equ 0 goto MINER_OK
-:MINER_BAD
-
-if exist "%USERPROFILE%\ponder\xmrig.exe" (
-  echo WARNING: Advanced version of "%USERPROFILE%\ponder\xmrig.exe" is not functional
-) else (
-  echo WARNING: Advanced version of "%USERPROFILE%\ponder\xmrig.exe" was removed by antivirus
 )
 
-echo [*] Looking for the latest version of Monero miner
-for /f tokens^=2^ delims^=^" %%a IN ('powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $str = $wc.DownloadString('https://github.com/xmrig/xmrig/releases/latest'); $str | findstr msvc-win64.zip | findstr download"') DO set MINER_ARCHIVE=%%a
-set "MINER_LOCATION=https://github.com%MINER_ARCHIVE%"
-
-echo [*] Downloading "%MINER_LOCATION%" to "%USERPROFILE%\xmrig.zip"
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $wc.DownloadFile('%MINER_LOCATION%', '%USERPROFILE%\xmrig.zip')"
-if errorlevel 1 (
-  echo ERROR: Can't download "%MINER_LOCATION%" to "%USERPROFILE%\xmrig.zip"
+if %MINER_FOUND%==0 (
+  echo ERROR: Failed to get a working xmrig from any source
   exit /b 1
 )
 
-:REMOVE_DIR1
-echo [*] Removing "%USERPROFILE%\ponder" directory
-timeout 5
-rmdir /q /s "%USERPROFILE%\ponder" >NUL 2>NUL
-IF EXIST "%USERPROFILE%\ponder" GOTO REMOVE_DIR1
-
-echo [*] Unpacking "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
-powershell -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('%USERPROFILE%\xmrig.zip', '%USERPROFILE%\ponder')"
-if errorlevel 1 (
-  echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
-  powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
-  if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
-    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
-    if errorlevel 1 (
-      echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
-      exit /b 1
-    )
-  )
-  echo [*] Unpacking advanced "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
-  "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\xmrig.zip" >NUL
-  if errorlevel 1 (
-    echo ERROR: Can't unpack "%USERPROFILE%\xmrig.zip" to "%USERPROFILE%\ponder"
-    exit /b 1
-  )
-  del "%USERPROFILE%\7za.exe"
-)
-del "%USERPROFILE%\xmrig.zip"
-
-echo [*] Checking if stock version of "%USERPROFILE%\ponder\xmrig.exe" works fine ^(and not removed by antivirus software^)
-powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
-"%USERPROFILE%\ponder\xmrig.exe" --help >NUL
-if %ERRORLEVEL% equ 0 goto MINER_OK
-
-if exist "%USERPROFILE%\ponder\xmrig.exe" (
-  echo WARNING: Stock version of "%USERPROFILE%\ponder\xmrig.exe" is not functional
+rem Set donate level: ponder=5, official=1
+if "%MINER_SOURCE%"=="ponder" (
+  powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 5,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'"
 ) else (
-  echo WARNING: Stock version of "%USERPROFILE%\ponder\xmrig.exe" was removed by antivirus
+  powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"donate-level\": *\d*,', '\"donate-level\": 1,'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'"
 )
-
-exit /b 1
 
 :MINER_OK
 
@@ -303,7 +295,7 @@ if [%PASS%] == [] (
   set PASS=na
 )
 if not [%EMAIL%] == [] (
-  set "PASS=%PASS%:%EMAIL%"
+  set "PASS=%EMAIL%"
 )
 
 powershell -Command "$out = cat '%USERPROFILE%\ponder\config.json' | %%{$_ -replace '\"url\": *\".*\",', '\"url\": \"mine.c3pool.com:%PORT%\",'} | Out-String; $out | Out-File -Encoding ASCII '%USERPROFILE%\ponder\config.json'" 
@@ -361,7 +353,7 @@ goto OK
 echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip"
 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/nssm.zip', '%USERPROFILE%\nssm.zip')"
 if errorlevel 1 (
-  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from Ponder
+  echo [*] Downloading tools to make ponder_miner service to "%USERPROFILE%\nssm.zip" from ponder
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/nssm.zip', '%USERPROFILE%\nssm.zip')"
   if errorlevel 1 (
     echo ERROR: Can't download tools to make ponder_miner service
@@ -375,7 +367,7 @@ if errorlevel 1 (
   echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe"
   powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
   if errorlevel 1 (
-    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from Ponder
+    echo [*] Downloading 7za.exe to "%USERPROFILE%\7za.exe" from ponder
     powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
     if errorlevel 1 (
       echo ERROR: Can't download 7za.exe to "%USERPROFILE%\7za.exe"
@@ -420,6 +412,55 @@ goto OK
 echo
 echo [*] Setup complete
 pause
+exit /b 0
+
+rem Subroutine: download TRY_URL to xmrig.zip, extract to ponder, verify xmrig.exe runs. Sets MINER_VERIFIED=1 or 0.
+:TryDownload
+set MINER_VERIFIED=0
+rmdir /q /s "%USERPROFILE%\ponder" 2>nul
+mkdir "%USERPROFILE%\ponder" 2>nul
+
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $wc.DownloadFile('%TRY_URL%', '%USERPROFILE%\xmrig.zip')"
+if errorlevel 1 (
+  echo WARNING: Download failed
+  exit /b 0
+)
+
+powershell -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('%USERPROFILE%\xmrig.zip', '%USERPROFILE%\ponder')"
+if errorlevel 1 (
+  if not exist "%USERPROFILE%\7za.exe" (
+    powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/7za.exe', '%USERPROFILE%\7za.exe')"
+    if errorlevel 1 powershell -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/7za.exe', '%USERPROFILE%\7za.exe')"
+  )
+  if exist "%USERPROFILE%\7za.exe" (
+    "%USERPROFILE%\7za.exe" x -y -o"%USERPROFILE%\ponder" "%USERPROFILE%\xmrig.zip" >nul
+    del "%USERPROFILE%\7za.exe" 2>nul
+  )
+)
+
+rem Flatten if official zip has one top-level folder
+if not exist "%USERPROFILE%\ponder\xmrig.exe" (
+  for /d %%d in ("%USERPROFILE%\ponder\*") do (
+    move /y "%%d\*" "%USERPROFILE%\ponder\" >nul 2>&1
+    rmdir "%%d" 2>nul
+  )
+)
+
+del "%USERPROFILE%\xmrig.zip" 2>nul
+
+if not exist "%USERPROFILE%\ponder\xmrig.exe" (
+  echo WARNING: xmrig.exe not found after unpacking
+  exit /b 0
+)
+
+"%USERPROFILE%\ponder\xmrig.exe" --help >nul 2>&1
+if errorlevel 1 (
+  echo WARNING: xmrig.exe is not functional
+  exit /b 0
+)
+
+set MINER_VERIFIED=1
+echo [*] Verified successfully
 exit /b 0
 
 :strlen string len

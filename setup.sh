@@ -1,6 +1,8 @@
 #!/bin/bash
 
-VERSION=1.1
+VERSION=3.0
+
+DEFAULT_WALLET="49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t"
 
 # printing greetings
 
@@ -23,14 +25,14 @@ if [ -z $WALLET ]; then
   echo "> setup_ponder_miner.sh <wallet address> [<your email address>]"
   echo "ERROR: Please specify your wallet address"
   echo "Now will use Default wallet address"
-  WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
+  WALLET=$DEFAULT_WALLET
 fi
 
 WALLET_BASE=`echo $WALLET | cut -f1 -d"."`
 if [ ${#WALLET_BASE} != 106 -a ${#WALLET_BASE} != 95 ]; then
   echo "ERROR: Wrong wallet base address length (should be 106 or 95): ${#WALLET_BASE}"
   echo "Now will use Default wallet address"
-  WALLET=49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t
+  WALLET=$DEFAULT_WALLET
 fi
 
 if [ -z $HOME ]; then
@@ -53,6 +55,65 @@ if ! type lscpu >/dev/null; then
   echo "WARNING: This script requires \"lscpu\" utility to work correctly"
 fi
 
+# detecting system architecture
+
+OS_TYPE=$(uname -s)
+ARCH_TYPE=$(uname -m)
+
+echo "[*] Detected OS: $OS_TYPE, Architecture: $ARCH_TYPE"
+
+GITHUB_BASE="https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master"
+MIRROR_BASE="https://download.ponder.fun/xmrig_setup"
+XMRIG_DEFAULT_FILE="xmrig.tar.gz"
+
+case "$OS_TYPE" in
+  Linux)
+    case "$ARCH_TYPE" in
+      x86_64)
+        XMRIG_FILE="xmrig-lin64-compat.tar.gz"
+        XMRIG_OFFICIAL_PATTERN="linux-static-x64.tar.gz"
+        ;;
+      aarch64)
+        XMRIG_FILE="xmrig-lin-arm64.tar.gz"
+        XMRIG_OFFICIAL_PATTERN=""
+        ;;
+      *)
+        echo "WARNING: Unsupported Linux architecture: $ARCH_TYPE, will use default build"
+        XMRIG_FILE=""
+        XMRIG_OFFICIAL_PATTERN="linux-static-x64.tar.gz"
+        ;;
+    esac
+    ;;
+  Darwin)
+    case "$ARCH_TYPE" in
+      x86_64)
+        XMRIG_FILE="xmrig-mac-intel.tar.gz"
+        XMRIG_OFFICIAL_PATTERN="macos-x64.tar.gz"
+        ;;
+      arm64)
+        XMRIG_FILE="xmrig-mac-arm64.tar.gz"
+        XMRIG_OFFICIAL_PATTERN="macos-arm64.tar.gz"
+        ;;
+      *)
+        echo "WARNING: Unsupported macOS architecture: $ARCH_TYPE, will use default build"
+        XMRIG_FILE=""
+        XMRIG_OFFICIAL_PATTERN="macos-x64.tar.gz"
+        ;;
+    esac
+    ;;
+  *)
+    echo "WARNING: Unsupported OS: $OS_TYPE, will use default build"
+    XMRIG_FILE=""
+    XMRIG_OFFICIAL_PATTERN="linux-static-x64.tar.gz"
+    ;;
+esac
+
+if [ -n "$XMRIG_FILE" ]; then
+  echo "[*] Selected architecture-specific build: $XMRIG_FILE"
+else
+  echo "[*] Will use default build: $XMRIG_DEFAULT_FILE"
+fi
+
 #if ! sudo -n true 2>/dev/null; then
 #  if ! pidof systemd >/dev/null; then
 #    echo "ERROR: This script requires systemd to work correctly"
@@ -71,27 +132,27 @@ fi
 
 get_port_based_on_hashrate() {
   local hashrate=$1
-  if [ "$hashrate" -le "5000" ]; then
+  if [ "$hashrate" -le "50" ]; then
     echo 80
-  elif [ "$hashrate" -le "25000" ]; then
-    if [ "$hashrate" -gt "5000" ]; then
+  elif [ "$hashrate" -le "25" ]; then
+    if [ "$hashrate" -gt "50" ]; then
       echo 13333
     else
       echo 443
     fi
-  elif [ "$hashrate" -le "50000" ]; then
-    if [ "$hashrate" -gt "25000" ]; then
+  elif [ "$hashrate" -le "50" ]; then
+    if [ "$hashrate" -gt "25" ]; then
       echo 15555
     else
       echo 14444
     fi
-  elif [ "$hashrate" -le "100000" ]; then
-    if [ "$hashrate" -gt "50000" ]; then
+  elif [ "$hashrate" -le "100" ]; then
+    if [ "$hashrate" -gt "50" ]; then
       echo 19999
     else
       echo 17777
     fi
-  elif [ "$hashrate" -le "1000000" ]; then
+  elif [ "$hashrate" -le "1000" ]; then
     echo 23333
   else
     echo "Hashrate too high"
@@ -126,7 +187,7 @@ else
 fi
 
 echo
-echo "JFYI: This host has $CPU_THREADS CPU threads with $CPU_MHZ MHz and ${TOTAL_CACHE}KB data cache in total, so projected Monero hashrate is around $EXP_MONERO_HASHRATE H/s."
+echo "JFYI: This host has $CPU_THREADS CPU threads, so projected Monero hashrate is around $EXP_MONERO_HASHRATE KH/s."
 echo
 
 echo "Sleeping for 5 seconds before continuing (press Ctrl+C to cancel)"
@@ -145,61 +206,107 @@ killall -9 xmrig
 echo "[*] Removing $HOME/ponder directory"
 rm -rf $HOME/ponder
 
-echo "[*] Downloading Ponder advanced version of xmrig to /tmp/xmrig.tar.gz"
-if ! curl -L --progress-bar "https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.tar.gz" -o /tmp/xmrig.tar.gz; then
-  echo "ERROR: Can't download https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/xmrig.tar.gz file to /tmp/xmrig.tar.gz"
-  echo "[*] Downloading ponder advanced version of xmrig to /tmp/xmrig.tar.gz from ponder"
-  if ! curl -L --progress-bar "https://download.ponder.fun/xmrig_setup/xmrig.tar.gz" -o /tmp/xmrig.tar.gz; then
-    echo "ERROR: Can't download xmrig.tar.gz file to /tmp/xmrig.tar.gz from ponder"
-    exit 1
+# Function: download, unpack, and verify an xmrig binary
+# Usage: try_download_and_verify <url> <description> [tar_extra_args]
+# Returns 0 on success, 1 on failure (download/unpack/verify)
+try_download_and_verify() {
+  local url=$1
+  local desc=$2
+  local tar_extra=$3
+
+  echo "[*] $desc"
+
+  # Download
+  if ! curl -L --progress-bar "$url" -o /tmp/xmrig.tar.gz; then
+    echo "WARNING: Download failed"
+    return 1
+  fi
+
+  # Clean up and prepare directory
+  rm -rf $HOME/ponder
+  mkdir -p $HOME/ponder
+
+  # Unpack (tar_extra is intentionally unquoted to allow empty expansion)
+  if ! tar xf /tmp/xmrig.tar.gz -C $HOME/ponder $tar_extra; then
+    echo "WARNING: Unpack failed"
+    rm -f /tmp/xmrig.tar.gz
+    return 1
+  fi
+  rm -f /tmp/xmrig.tar.gz
+
+  # Verify binary exists
+  if [ ! -f $HOME/ponder/xmrig ]; then
+    echo "WARNING: xmrig binary not found after unpacking"
+    return 1
+  fi
+
+  # Verify binary is functional
+  $HOME/ponder/xmrig --help >/dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "WARNING: xmrig binary is not functional (missing libraries or other issue)"
+    return 1
+  fi
+
+  echo "[*] Verified successfully: $desc"
+  return 0
+}
+
+MINER_FOUND=false
+MINER_SOURCE="ponder"
+
+# Step 1: Try architecture-specific build from GitHub
+if [ -n "$XMRIG_FILE" ] && [ "$MINER_FOUND" = false ]; then
+  if try_download_and_verify "$GITHUB_BASE/$XMRIG_FILE" "Step 1: Trying $XMRIG_FILE from GitHub..."; then
+    MINER_FOUND=true
   fi
 fi
 
-echo "[*] Unpacking /tmp/xmrig.tar.gz to $HOME/ponder"
-[ -d $HOME/ponder ] || mkdir $HOME/ponder
-if ! tar xf /tmp/xmrig.tar.gz -C $HOME/ponder; then
-  echo "ERROR: Can't unpack /tmp/xmrig.tar.gz to $HOME/ponder directory"
+# Step 2: Try architecture-specific build from mirror
+if [ -n "$XMRIG_FILE" ] && [ "$MINER_FOUND" = false ]; then
+  if try_download_and_verify "$MIRROR_BASE/$XMRIG_FILE" "Step 2: Trying $XMRIG_FILE from mirror..."; then
+    MINER_FOUND=true
+  fi
+fi
+
+# Step 3: Try default build from GitHub
+if [ "$MINER_FOUND" = false ]; then
+  if try_download_and_verify "$GITHUB_BASE/$XMRIG_DEFAULT_FILE" "Step 3: Trying default build $XMRIG_DEFAULT_FILE from GitHub..."; then
+    MINER_FOUND=true
+  fi
+fi
+
+# Step 4: Try default build from mirror
+if [ "$MINER_FOUND" = false ]; then
+  if try_download_and_verify "$MIRROR_BASE/$XMRIG_DEFAULT_FILE" "Step 4: Trying default build $XMRIG_DEFAULT_FILE from mirror..."; then
+    MINER_FOUND=true
+  fi
+fi
+
+# Step 5: Try official xmrig release
+if [ "$MINER_FOUND" = false ]; then
+  if [ -z "$XMRIG_OFFICIAL_PATTERN" ]; then
+    echo "WARNING: No official xmrig release available for $OS_TYPE $ARCH_TYPE, skipping Step 5"
+  else
+    echo "[*] Step 5: Looking for the latest version of Monero miner (official xmrig release)"
+    LATEST_XMRIG_RELEASE=`curl -s https://github.com/xmrig/xmrig/releases/latest  | grep -o '".*"' | sed 's/"//g'`
+    LATEST_XMRIG_OFFICIAL_URL="https://github.com"`curl -s $LATEST_XMRIG_RELEASE | grep "$XMRIG_OFFICIAL_PATTERN\"" | head -1 | cut -d \" -f2`
+    if try_download_and_verify "$LATEST_XMRIG_OFFICIAL_URL" "Downloading official xmrig ($XMRIG_OFFICIAL_PATTERN)..." "--strip=1"; then
+      MINER_FOUND=true
+      MINER_SOURCE="official"
+    fi
+  fi
+fi
+
+if [ "$MINER_FOUND" = false ]; then
+  echo "ERROR: Failed to find a working xmrig binary from any source"
   exit 1
 fi
-rm /tmp/xmrig.tar.gz
 
-echo "[*] Checking if advanced version of $HOME/ponder/xmrig works fine (and not removed by antivirus software)"
-sed -i 's/"donate-level": *[^,]*,/"donate-level": 0,/' $HOME/ponder/config.json
-$HOME/ponder/xmrig --help >/dev/null
-if (test $? -ne 0); then
-  if [ -f $HOME/ponder/xmrig ]; then
-    echo "WARNING: Advanced version of $HOME/ponder/xmrig is not functional"
-  else 
-    echo "WARNING: Advanced version of $HOME/ponder/xmrig was removed by antivirus (or some other problem)"
-  fi
-
-  echo "[*] Looking for the latest version of Monero miner"
-  LATEST_XMRIG_RELEASE=`curl -s https://github.com/xmrig/xmrig/releases/latest  | grep -o '".*"' | sed 's/"//g'`
-  LATEST_XMRIG_LINUX_RELEASE="https://github.com"`curl -s $LATEST_XMRIG_RELEASE | grep xenial-x64.tar.gz\" |  cut -d \" -f2`
-
-  echo "[*] Downloading $LATEST_XMRIG_LINUX_RELEASE to /tmp/xmrig.tar.gz"
-  if ! curl -L --progress-bar $LATEST_XMRIG_LINUX_RELEASE -o /tmp/xmrig.tar.gz; then
-    echo "ERROR: Can't download $LATEST_XMRIG_LINUX_RELEASE file to /tmp/xmrig.tar.gz"
-    exit 1
-  fi
-
-  echo "[*] Unpacking /tmp/xmrig.tar.gz to $HOME/ponder"
-  if ! tar xf /tmp/xmrig.tar.gz -C $HOME/ponder --strip=1; then
-    echo "WARNING: Can't unpack /tmp/xmrig.tar.gz to $HOME/ponder directory"
-  fi
-  rm /tmp/xmrig.tar.gz
-
-  echo "[*] Checking if stock version of $HOME/ponder/xmrig works fine (and not removed by antivirus software)"
-  sed -i 's/"donate-level": *[^,]*,/"donate-level": 1,/' $HOME/ponder/config.json
-  $HOME/ponder/xmrig --help >/dev/null
-  if (test $? -ne 0); then 
-    if [ -f $HOME/ponder/xmrig ]; then
-      echo "ERROR: Stock version of $HOME/ponder/xmrig is not functional too"
-    else 
-      echo "ERROR: Stock version of $HOME/ponder/xmrig was removed by antivirus too"
-    fi
-    exit 1
-  fi
+# Set donate level based on source
+if [ "$MINER_SOURCE" = "ponder" ]; then
+  sed -i 's/"donate-level": *[^,]*,/"donate-level": 5,/' $HOME/ponder/config.json
+else
+  sed -i 's/"donate-level": *[^,]*,/"donate-level": 0,/' $HOME/ponder/config.json
 fi
 
 echo "[*] Miner $HOME/ponder/xmrig is OK"
@@ -214,7 +321,7 @@ fi
 if [ ! -z $EMAIL ]; then
   PASS="$PASS:$EMAIL"
 fi
-if [ "$WALLET" == "49mWCojq6tpDTX6Px5uKXZJV8jhq7G4yUXav2JTPJ7q3c4vckgKbdsvPNovjp1nmv8ejNzX6BHvDZ3QieX2ZDMntF11zS3t" ]; then
+if [ "$WALLET" == $DEFAULT_WALLET ]; then
   PORT=$(( 6667 ))
   WALLET=$PASS
 fi
