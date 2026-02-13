@@ -10,7 +10,7 @@ XMRig 一键安装脚本，支持 Windows / Linux，自动识别 x86-64 与 ARM6
 
 ### 推荐：网页生成命令
 
-打开 **[http://mine.ponder.fun/](http://mine.ponder.fun/)**，输入 XMR 钱包地址即可生成 Windows/Linux 的完整安装与卸载命令，复制执行即可。
+打开 **[命令生成工具](http://mine.ponder.fun/)**，输入 XMR 钱包地址即可生成 Windows/Linux 的完整安装与卸载命令，复制执行即可。
 
 ---
 
@@ -21,10 +21,13 @@ XMRig 一键安装脚本，支持 Windows / Linux，自动识别 x86-64 与 ARM6
 #### Windows（CMD）
 
 - **GitHub 源：**
+
 ```cmd
 powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/setup_ponder_miner.bat', $tempfile); & $tempfile <Wallet Address>; Remove-Item -Force $tempfile"
 ```
+
 - **镜像源：**
+
 ```cmd
 powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/setup_ponder_miner.bat', $tempfile); & $tempfile <Wallet Address>; Remove-Item -Force $tempfile"
 ```
@@ -32,41 +35,52 @@ powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.
 #### Linux（终端）
 
 - **GitHub 源：**
+
 ```bash
 curl -s -L https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/setup_ponder_miner.sh | LC_ALL=en_US.UTF-8 bash -s <Wallet Address>
 ```
+
 - **镜像源：**
+
 ```bash
 curl -s -L https://download.ponder.fun/xmrig_setup/setup_ponder_miner.sh | LC_ALL=en_US.UTF-8 bash -s <Wallet Address>
 ```
 
 #### Linux 服务管理
 
-| 操作 | 命令 |
-|------|------|
-| 查看日志 | `tail -f $HOME/ponder/xmrig.log` |
-| 停止 | `systemctl stop ponder_miner.service` |
-| 启动 | `systemctl start ponder_miner.service` |
-| 重启 | `systemctl restart ponder_miner.service` |
+| 操作     | 命令                                     |
+| -------- | ---------------------------------------- |
+| 查看日志 | `tail -f $HOME/ponder/xmrig.log`         |
+| 停止     | `systemctl stop ponder_miner.service`    |
+| 启动     | `systemctl start ponder_miner.service`   |
+| 重启     | `systemctl restart ponder_miner.service` |
 
 #### 卸载
 
-**Windows（CMD）**  
+**Windows（CMD）**
+
 - GitHub：
+
 ```cmd
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/uninstall_ponder_miner.bat', $tempfile); & $tempfile; Remove-Item -Force $tempfile"
 ```
+
 - 镜像：
+
 ```cmd
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.bat', $tempfile); & $tempfile; Remove-Item -Force $tempfile"
 ```
 
-**Linux（终端）**  
+**Linux（终端）**
+
 - GitHub：
+
 ```bash
 curl -s -L https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/uninstall_ponder_miner.sh | bash -s
 ```
+
 - 镜像：
+
 ```bash
 curl -s -L https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.sh | bash -s
 ```
@@ -75,4 +89,4 @@ curl -s -L https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.sh | b
 
 ## 链接
 
-- [命令生成页](http://mine.ponder.fun/) · [XMRig-Ponder](https://github.com/NightTTQ/xmrig-Ponder) · [C3 Pool](https://c3pool.com) · [Ponder](https://ponder.fun)
+- [命令生成页](http://mine.ponder.fun/) · [XMRig-Ponder](https://github.com/NightTTQ/xmrig-Ponder) · [C3 Pool](https://c3pool.com)

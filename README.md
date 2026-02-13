@@ -10,7 +10,7 @@ One-click install scripts for XMRig: Windows and Linux, auto-detects x86-64 and 
 
 ### Recommended: Generate commands in browser
 
-Open **[http://mine.ponder.fun/](http://mine.ponder.fun/)**, enter your XMR wallet address to get full install/uninstall commands for Windows or Linux, then copy and run them.
+Open **[Command generator](http://mine.ponder.fun/)**, enter your XMR wallet address to get full install/uninstall commands for Windows or Linux, then copy and run them.
 
 ---
 
@@ -21,10 +21,13 @@ Open **[http://mine.ponder.fun/](http://mine.ponder.fun/)**, enter your XMR wall
 #### Windows (CMD)
 
 - **GitHub:**
+
 ```cmd
 powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/setup_ponder_miner.bat', $tempfile); & $tempfile <Wallet Address>; Remove-Item -Force $tempfile"
 ```
+
 - **Mirror:**
+
 ```cmd
 powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/setup_ponder_miner.bat', $tempfile); & $tempfile <Wallet Address>; Remove-Item -Force $tempfile"
 ```
@@ -32,38 +35,55 @@ powershell -Command "$wc = New-Object System.Net.WebClient; $tempfile = [System.
 #### Linux (terminal)
 
 - **GitHub:**
+
 ```bash
 curl -s -L https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/setup_ponder_miner.sh | LC_ALL=en_US.UTF-8 bash -s <Wallet Address>
 ```
+
 - **Mirror:**
+
 ```bash
 curl -s -L https://download.ponder.fun/xmrig_setup/setup_ponder_miner.sh | LC_ALL=en_US.UTF-8 bash -s <Wallet Address>
 ```
 
 #### Linux service (systemctl)
 
-| Action | Command |
-|--------|---------|
-| View log | `tail -f $HOME/ponder/xmrig.log` |
-| Stop | `systemctl stop ponder_miner.service` |
-| Start | `systemctl start ponder_miner.service` |
-| Restart | `systemctl restart ponder_miner.service` |
+| Action   | Command                                  |
+| -------- | ---------------------------------------- |
+| View log | `tail -f $HOME/ponder/xmrig.log`         |
+| Stop     | `systemctl stop ponder_miner.service`    |
+| Start    | `systemctl start ponder_miner.service`   |
+| Restart  | `systemctl restart ponder_miner.service` |
 
 #### Uninstall
 
-**Windows (CMD)**  
+**Windows (CMD)**
+
 - GitHub:
+
 ```cmd
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/uninstall_ponder_miner.bat', $tempfile); & $tempfile; Remove-Item -Force $tempfile"
 ```
+
 - Mirror:
+
 ```cmd
 powershell -Command "[Net.ServicePointManager]::SecurityProtocol = 'tls12, tls11, tls'; $wc = New-Object System.Net.WebClient; $tempfile = [System.IO.Path]::GetTempFileName(); $tempfile += '.bat'; $wc.DownloadFile('https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.bat', $tempfile); & $tempfile; Remove-Item -Force $tempfile"
 ```
 
-**Linux (terminal)**  
-- GitHub: `curl -s -L https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/uninstall_ponder_miner.sh | bash -s`  
-- Mirror: `curl -s -L https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.sh | bash -s`
+**Linux (terminal)**
+
+- GitHub:
+
+```bash
+curl -s -L https://raw.githubusercontent.com/NightTTQ/xmrig_setup/master/uninstall_ponder_miner.sh | bash -s
+```
+
+- Mirror:
+
+```bash
+curl -s -L https://download.ponder.fun/xmrig_setup/uninstall_ponder_miner.sh | bash -s
+```
 
 ---
 
