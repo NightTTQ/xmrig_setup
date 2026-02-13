@@ -87,11 +87,11 @@ set "MIRROR_BASE=https://download.ponder.fun/xmrig_setup"
 set "XMRIG_DEFAULT_FILE=xmrig.zip"
 
 if "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
-  set "XMRIG_FILE=xmrig-arm64.zip"
+  set "XMRIG_FILE=xmrig-windows-arm64.zip"
   set "XMRIG_OFFICIAL_PATTERN=windows-arm64.zip"
   echo [*] Detected architecture: ARM64 - using xmrig-arm64.zip
 ) else (
-  set "XMRIG_FILE=xmrig-win64.zip"
+  set "XMRIG_FILE=xmrig-windows-x64-msvc.zip"
   set "XMRIG_OFFICIAL_PATTERN=windows-x64.zip"
   if not "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     echo [*] Detected architecture: %PROCESSOR_ARCHITECTURE% - will try default x64 build

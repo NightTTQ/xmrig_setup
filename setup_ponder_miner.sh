@@ -66,11 +66,11 @@ case "$OS_TYPE" in
   Linux)
     case "$ARCH_TYPE" in
       x86_64)
-        XMRIG_FILE="xmrig-lin64-compat.tar.gz"
+        XMRIG_FILE="xmrig-linux-x64-static.tar.gz"
         XMRIG_OFFICIAL_PATTERN="linux-static-x64.tar.gz"
         ;;
       aarch64)
-        XMRIG_FILE="xmrig-lin-arm64.tar.gz"
+        XMRIG_FILE="xmrig-linux-arm64-static.tar.gz"
         XMRIG_OFFICIAL_PATTERN=""
         ;;
       *)
@@ -83,11 +83,11 @@ case "$OS_TYPE" in
   Darwin)
     case "$ARCH_TYPE" in
       x86_64)
-        XMRIG_FILE="xmrig-mac-intel.tar.gz"
+        XMRIG_FILE="xmrig-macos-x64.tar.gz"
         XMRIG_OFFICIAL_PATTERN="macos-x64.tar.gz"
         ;;
       arm64)
-        XMRIG_FILE="xmrig-mac-arm64.tar.gz"
+        XMRIG_FILE="xmrig-macos-arm64.tar.gz"
         XMRIG_OFFICIAL_PATTERN="macos-arm64.tar.gz"
         ;;
       *)
