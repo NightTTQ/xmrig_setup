@@ -43,10 +43,11 @@ if not exist "%USERPROFILE%" (
   exit /b 1
 )
 
-where wmic >NUL
-if not %errorlevel% == 0 (
-  echo ERROR: This script requires "wmic" utility to work correctly
-  exit /b 1
+set WMIC_AVAILABLE=0
+where wmic >NUL 2>&1
+if %errorlevel% == 0 set WMIC_AVAILABLE=1
+if %WMIC_AVAILABLE%==0 (
+  echo [*] wmic not available ^(optional on Windows 11^), will use PowerShell or defaults for CPU info
 )
 
 where powershell >NUL
@@ -74,10 +75,10 @@ if not %errorlevel% == 0 (
 )
 
 if %ADMIN% == 1 (
-  where sc >NUL
+  where sc >NUL 2>&1
   if not %errorlevel% == 0 (
-    echo ERROR: This script requires "sc" utility to work correctly
-    exit /b 1
+    echo [*] "sc" not available ^(optional feature on some Windows^), will use startup script instead of service
+    set ADMIN=0
   )
 )
 
@@ -102,57 +103,60 @@ if "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
 )
 if not defined XMRIG_FILE set "XMRIG_FILE="
 
-rem calculating port
+set CPU_SOCKETS=1
+set CPU_CORES_PER_SOCKET=1
+set CPU_THREADS_PER_SOCKET=1
+set CPU_MHZ=1000
+set CPU_L2_CACHE=256
+set CPU_L3_CACHE=2048
 
-for /f "tokens=*" %%a in ('wmic cpu get SocketDesignation /Format:List ^| findstr /r /v "^$" ^| find /c /v ""') do set CPU_SOCKETS=%%a
-if [%CPU_SOCKETS%] == [] ( 
-  echo WARNING: Can't get CPU sockets from wmic output
-  set CPU_SOCKETS=1
-)
+if %WMIC_AVAILABLE%==1 goto GET_CPU_WMIC
+goto GET_CPU_PS_OR_DEFAULT
 
-for /f "tokens=*" %%a in ('wmic cpu get NumberOfCores /Format:List ^| findstr /r /v "^$"') do set CPU_CORES_PER_SOCKET=%%a
+:GET_CPU_WMIC
+for /f "tokens=*" %%a in ('wmic cpu get SocketDesignation /Format:List ^| findstr /r /v "^$" ^| find /c /v "" 2^>nul') do set CPU_SOCKETS=%%a
+if [%CPU_SOCKETS%] == [] set CPU_SOCKETS=1
+for /f "tokens=*" %%a in ('wmic cpu get NumberOfCores /Format:List ^| findstr /r /v "^$" 2^>nul') do set CPU_CORES_PER_SOCKET=%%a
 for /f "tokens=1,* delims==" %%a in ("%CPU_CORES_PER_SOCKET%") do set CPU_CORES_PER_SOCKET=%%b
-if [%CPU_CORES_PER_SOCKET%] == [] ( 
-  echo WARNING: Can't get CPU cores per socket from wmic output
-  set CPU_CORES_PER_SOCKET=1
-)
-
-for /f "tokens=*" %%a in ('wmic cpu get NumberOfLogicalProcessors /Format:List ^| findstr /r /v "^$"') do set CPU_THREADS=%%a
-for /f "tokens=1,* delims==" %%a in ("%CPU_THREADS%") do set CPU_THREADS=%%b
-if [%CPU_THREADS%] == [] ( 
-  echo WARNING: Can't get CPU cores from wmic output
-  set CPU_THREADS=1
-)
-set /a "CPU_THREADS = %CPU_SOCKETS% * %CPU_THREADS%"
-
-for /f "tokens=*" %%a in ('wmic cpu get MaxClockSpeed /Format:List ^| findstr /r /v "^$"') do set CPU_MHZ=%%a
+if [%CPU_CORES_PER_SOCKET%] == [] set CPU_CORES_PER_SOCKET=1
+for /f "tokens=*" %%a in ('wmic cpu get NumberOfLogicalProcessors /Format:List ^| findstr /r /v "^$" 2^>nul') do set CPU_THREADS_PER_SOCKET=%%a
+for /f "tokens=1,* delims==" %%a in ("%CPU_THREADS_PER_SOCKET%") do set CPU_THREADS_PER_SOCKET=%%b
+if [%CPU_THREADS_PER_SOCKET%] == [] set CPU_THREADS_PER_SOCKET=1
+for /f "tokens=*" %%a in ('wmic cpu get MaxClockSpeed /Format:List ^| findstr /r /v "^$" 2^>nul') do set CPU_MHZ=%%a
 for /f "tokens=1,* delims==" %%a in ("%CPU_MHZ%") do set CPU_MHZ=%%b
-if [%CPU_MHZ%] == [] ( 
-  echo WARNING: Can't get CPU MHz from wmic output
-  set CPU_MHZ=1000
-)
-
-for /f "tokens=*" %%a in ('wmic cpu get L2CacheSize /Format:List ^| findstr /r /v "^$"') do set CPU_L2_CACHE=%%a
+if [%CPU_MHZ%] == [] set CPU_MHZ=1000
+for /f "tokens=*" %%a in ('wmic cpu get L2CacheSize /Format:List ^| findstr /r /v "^$" 2^>nul') do set CPU_L2_CACHE=%%a
 for /f "tokens=1,* delims==" %%a in ("%CPU_L2_CACHE%") do set CPU_L2_CACHE=%%b
-if [%CPU_L2_CACHE%] == [] ( 
-  echo WARNING: Can't get L2 CPU cache from wmic output
-  set CPU_L2_CACHE=256
-)
-
-for /f "tokens=*" %%a in ('wmic cpu get L3CacheSize /Format:List ^| findstr /r /v "^$"') do set CPU_L3_CACHE=%%a
+if [%CPU_L2_CACHE%] == [] set CPU_L2_CACHE=256
+for /f "tokens=*" %%a in ('wmic cpu get L3CacheSize /Format:List ^| findstr /r /v "^$" 2^>nul') do set CPU_L3_CACHE=%%a
 for /f "tokens=1,* delims==" %%a in ("%CPU_L3_CACHE%") do set CPU_L3_CACHE=%%b
-if [%CPU_L3_CACHE%] == [] ( 
-  echo WARNING: Can't get L3 CPU cache from wmic output
-  set CPU_L3_CACHE=2048
-)
+if [%CPU_L3_CACHE%] == [] set CPU_L3_CACHE=2048
+goto PORT_CALC
 
+:GET_CPU_PS_OR_DEFAULT
+for /f "usebackq tokens=1,* delims==" %%a in (`powershell -NoProfile -Command "try { $cs = (Get-CimInstance Win32_Processor -ErrorAction Stop).Count; if (-not $cs) { $cs = 1 }; $p = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1; if ($p) { $l2 = if ($p.L2CacheSize -gt 0) { $p.L2CacheSize } else { 256 }; $l3 = if ($p.L3CacheSize -gt 0) { $p.L3CacheSize } else { 2048 }; Write-Output ('CPU_SOCKETS=' + $cs); Write-Output ('CPU_CORES_PER_SOCKET=' + [int]$p.NumberOfCores); Write-Output ('CPU_THREADS_PER_SOCKET=' + [int]$p.NumberOfLogicalProcessors); Write-Output ('CPU_MHZ=' + [int]$p.MaxClockSpeed); Write-Output ('CPU_L2_CACHE=' + $l2); Write-Output ('CPU_L3_CACHE=' + $l3) } } catch {}" 2^>nul`) do set "%%a=%%b"
+if [%CPU_SOCKETS%] == [] set CPU_SOCKETS=1
+if [%CPU_CORES_PER_SOCKET%] == [] set CPU_CORES_PER_SOCKET=1
+if [%CPU_THREADS_PER_SOCKET%] == [] set CPU_THREADS_PER_SOCKET=1
+if [%CPU_MHZ%] == [] set CPU_MHZ=1000
+if [%CPU_L2_CACHE%] == [] set CPU_L2_CACHE=256
+if [%CPU_L3_CACHE%] == [] set CPU_L3_CACHE=2048
+goto PORT_CALC
+
+:PORT_CALC
+set /a "CPU_THREADS = %CPU_SOCKETS% * %CPU_THREADS_PER_SOCKET%"
+if %CPU_THREADS% lss 1 set CPU_THREADS=1
+
+if %CPU_CORES_PER_SOCKET% lss 1 set CPU_CORES_PER_SOCKET=1
 set /a "TOTAL_CACHE = %CPU_SOCKETS% * (%CPU_L2_CACHE% / %CPU_CORES_PER_SOCKET% + %CPU_L3_CACHE%)"
-if [%TOTAL_CACHE%] == [] ( 
-  echo ERROR: Can't compute total cache
-  exit 
+if not defined TOTAL_CACHE set TOTAL_CACHE=0
+if %TOTAL_CACHE% lss 1 (
+  echo WARNING: Can't compute total cache, using default 2048 for port selection
+  set TOTAL_CACHE=2048
 )
 
 set /a "CACHE_THREADS = %TOTAL_CACHE% / 2048"
+if %CACHE_THREADS% lss 1 set CACHE_THREADS=1
 
 if %CPU_THREADS% lss %CACHE_THREADS% (
   set /a "EXP_MONERO_HASHRATE = %CPU_THREADS% * (%CPU_MHZ% * 20 / 1000) * 5"
@@ -160,9 +164,12 @@ if %CPU_THREADS% lss %CACHE_THREADS% (
   set /a "EXP_MONERO_HASHRATE = %CACHE_THREADS% * (%CPU_MHZ% * 20 / 1000) * 5"
 )
 
-if [%EXP_MONERO_HASHRATE%] == [] ( 
-  echo ERROR: Can't compute projected Monero hashrate
-  exit 
+if not defined EXP_MONERO_HASHRATE set EXP_MONERO_HASHRATE=0
+if %EXP_MONERO_HASHRATE% lss 1 (
+  echo WARNING: Can't compute projected hashrate, using default port 80
+  set EXP_MONERO_HASHRATE=0
+  set PORT=80
+  goto PORT_OK
 )
 
 if %EXP_MONERO_HASHRATE% gtr 208400  ( set PORT=19999 & goto PORT_OK )
@@ -211,9 +218,11 @@ timeout 5
 rem start doing stuff: preparing miner
 
 echo [*] Removing previous ponder miner (if any)
-sc stop ponder_miner
-sc delete ponder_miner
-taskkill /f /t /im xmrig.exe
+if %ADMIN%==1 (
+  sc stop ponder_miner 2>nul
+  sc delete ponder_miner 2>nul
+)
+taskkill /f /t /im xmrig.exe 2>nul
 
 :REMOVE_DIR0
 echo [*] Removing "%USERPROFILE%\ponder" directory
